@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>楽焼 うわぐすり焼成温度ガイド</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    input[type=range] { accent-color: #b45309; }
+    .preset-btn { transition: background 0.2s, color 0.2s; }
+    .preset-btn.active { background-color: #b45309; color: white; }
+    textarea { resize: vertical; }
+  </style>
+</head>
+<body class="bg-amber-50 min-h-screen">
+  <header class="bg-amber-800 text-white py-4 px-4 shadow">
+    <h1 class="text-xl font-bold">🏺 楽焼 うわぐすり焼成温度ガイド</h1>
+    <p class="text-sm mt-1 opacity-90">釉薬成分 → 融点・焼成帯推定 + 煙還元チェックリスト</p>
+  </header>
+
+  <div class="max-w-5xl mx-auto px-4 py-6 grid md:grid-cols-2 gap-6">
+    <!-- Left: Inputs -->
+    <div class="flex flex-col gap-5">
+      <!-- Presets -->
+      <section class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-bold text-amber-900 mb-3">プリセット釉薬</h2>
+        <div class="flex gap-2 flex-wrap">
+          <button class="preset-btn px-4 py-2 rounded-full border border-gray-700 text-sm font-medium" data-preset="kuro" aria-label="黒楽プリセット">黒楽</button>
+          <button class="preset-btn px-4 py-2 rounded-full border border-red-700 text-sm font-medium text-red-700" data-preset="aka" aria-label="赤楽プリセット">赤楽</button>
+          <button class="preset-btn px-4 py-2 rounded-full border border-gray-300 text-sm font-medium text-gray-600" data-preset="shiro" aria-label="白楽プリセット">白楽</button>
+        </div>
+      </section>
+
+      <!-- Sliders -->
+      <section class="bg-white rounded-xl shadow p-5 flex flex-col gap-4">
+        <h2 class="text-base font-bold text-amber-900 border-b border-amber-100 pb-2">釉薬成分（合計100%に自動正規化）</h2>
+
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="feldspar-sl" class="text-sm font-medium text-gray-700">長石（ちょうせき）</label>
+            <span id="feldspar-pct" class="text-amber-700 font-bold text-sm">50%</span>
+          </div>
+          <input type="range" id="feldspar-sl" min="0" max="100" value="50" class="w-full" />
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="silica-sl" class="text-sm font-medium text-gray-700">珪石（けいせき）</label>
+            <span id="silica-pct" class="text-amber-700 font-bold text-sm">25%</span>
+          </div>
+          <input type="range" id="silica-sl" min="0" max="100" value="25" class="w-full" />
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="calcium-sl" class="text-sm font-medium text-gray-700">炭酸カルシウム</label>
+            <span id="calcium-pct" class="text-amber-700 font-bold text-sm">20%</span>
+          </div>
+          <input type="range" id="calcium-sl" min="0" max="100" value="20" class="w-full" />
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <label for="oxide-sl" class="text-sm font-medium text-gray-700">金属酸化物</label>
+            <span id="oxide-pct" class="text-amber-700 font-bold text-sm">5%</span>
+          </div>
+          <input type="range" id="oxide-sl" min="0" max="100" value="5" class="w-full" />
+        </div>
+
+        <div>
+          <label for="oxide-type" class="text-sm font-medium text-gray-700 block mb-1">金属酸化物の種類</label>
+          <select id="oxide-type" class="border border-gray-300 rounded px-3 py-2 w-full text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none">
+            <option value="iron">酸化鉄 Fe₂O₃（黒・茶）</option>
+            <option value="copper">酸化銅 CuO（緑・赤）</option>
+            <option value="cobalt">酸化コバルト CoO（青）</option>
+            <option value="manganese">酸化マンガン MnO₂（茶紫）</option>
+            <option value="none">なし（透明・白）</option>
+          </select>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right: Results + Checklist -->
+    <div class="flex flex-col gap-5">
+      <!-- Results -->
+      <section class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-bold text-amber-900 border-b border-amber-100 pb-2 mb-4">推定焼成データ</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-red-50 rounded-lg p-3 text-center">
+            <div class="text-xl font-bold text-red-700" id="res-fusion">920°C</div>
+            <div class="text-xs text-gray-500 mt-1">推定融点</div>
+          </div>
+          <div class="bg-orange-50 rounded-lg p-3 text-center">
+            <div class="text-sm font-bold text-orange-700 leading-tight" id="res-range">860〜980°C</div>
+            <div class="text-xs text-gray-500 mt-1">焼成帯</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-amber-700" id="res-texture">半艶</div>
+            <div class="text-xs text-gray-500 mt-1">釉薬質感</div>
+          </div>
+          <div class="rounded-lg p-3 text-center" id="res-color-box" style="background:#f5f5f0">
+            <div class="text-lg font-bold" id="res-color">黒〜茶</div>
+            <div class="text-xs text-gray-500 mt-1">予想発色</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reduction Checklist -->
+      <section class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-bold text-amber-900 border-b border-amber-100 pb-2 mb-3">煙還元焼成チェックリスト</h2>
+        <div id="reduction-steps" class="flex flex-col gap-2"></div>
+      </section>
+
+      <!-- Notes -->
+      <section class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-bold text-amber-900 mb-2">焼成セッションメモ</h2>
+        <textarea id="notes-area" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none" placeholder="釉薬配合・温度・気づきを記録..."></textarea>
+        <div class="flex gap-2 mt-2">
+          <button id="save-notes" class="bg-amber-600 text-white text-sm px-4 py-2 rounded hover:bg-amber-700 transition">保存</button>
+          <span id="save-msg" class="text-xs text-green-600 self-center hidden">保存しました</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const REDUCTION_STEPS = [
+  { id: 'load', label: '窯入れ（こめいれ）', note: '作品を窯に入れ、ふたをします。作品同士が触れないよう配置します。' },
+  { id: 'heat', label: '昇温（しょうおん）', note: '800°Cまで毎分10〜15°Cで昇温。急激な昇温はクラックの原因になります。' },
+  { id: 'peak', label: 'ピーク温度到達', note: '目標温度（推定融点付近）を確認。釉薬が溶融し流れ始めたら到達のサインです。' },
+  { id: 'remove', label: '作品取り出し', note: '焼成ばさみで素早く取り出します。軍手2枚重ねで作業し、火傷に注意。' },
+  { id: 'reduction', label: '煙還元ボックス投入', note: '取り出した直後（約800°C）に新聞紙・木材チップ入りのボックスに投入。蓋をして1〜5分燻します。' },
+  { id: 'cool', label: '冷却', note: '煙還元後、砂の上に置いて徐々に冷却。急冷は避け、室温まで自然冷却します（20〜30分）。' },
+];
+
+const PRESETS = {
+  kuro: { f: 60, s: 15, c: 15, o: 10, type: 'iron', label: '黒楽' },
+  aka:  { f: 45, s: 30, c: 20, o: 5,  type: 'iron', label: '赤楽' },
+  shiro:{ f: 55, s: 20, c: 25, o: 0,  type: 'none', label: '白楽' },
+};
+
+const COLOR_INFO = {
+  iron:      { text: '黒〜茶', bg: '#4a3728', fg: '#fff' },
+  copper:    { text: '緑〜銅赤', bg: '#2d6a4f', fg: '#fff' },
+  cobalt:    { text: '青〜瑠璃', bg: '#1e3a5f', fg: '#fff' },
+  manganese: { text: '茶〜紫', bg: '#5b3058', fg: '#fff' },
+  none:      { text: '透明〜白', bg: '#f0f0f0', fg: '#333' },
+};
+
+let reductionChecks = JSON.parse(localStorage.getItem('raku-reduction') || '{}');
+function saveRed() { localStorage.setItem('raku-reduction', JSON.stringify(reductionChecks)); }
+
+function renderReduction() {
+  const c = document.getElementById('reduction-steps');
+  c.innerHTML = '';
+  REDUCTION_STEPS.forEach(step => {
+    const checked = !!reductionChecks[step.id];
+    const row = document.createElement('label');
+    row.className = 'flex items-start gap-3 p-2 rounded hover:bg-amber-50 cursor-pointer';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked;
+    cb.className = 'mt-1 w-4 h-4 accent-amber-700 flex-shrink-0';
+    cb.setAttribute('aria-label', step.label);
+
+    const textDiv = document.createElement('div');
+    const labelEl = document.createElement('div');
+    labelEl.className = 'text-sm font-medium ' + (checked ? 'line-through text-gray-400' : 'text-gray-800');
+    labelEl.textContent = step.label;
+
+    const noteEl = document.createElement('div');
+    noteEl.className = 'text-xs text-gray-500 mt-0.5';
+    noteEl.textContent = step.note;
+
+    textDiv.appendChild(labelEl);
+    textDiv.appendChild(noteEl);
+    row.appendChild(cb);
+    row.appendChild(textDiv);
+    c.appendChild(row);
+
+    cb.addEventListener('change', (e) => {
+      reductionChecks[step.id] = e.target.checked;
+      saveRed();
+      renderReduction();
+    });
+  });
+}
+
+function getNorm() {
+  const f = parseInt(document.getElementById('feldspar-sl').value);
+  const s = parseInt(document.getElementById('silica-sl').value);
+  const ca = parseInt(document.getElementById('calcium-sl').value);
+  const o = parseInt(document.getElementById('oxide-sl').value);
+  const total = f + s + ca + o || 1;
+  return { f: f/total*100, s: s/total*100, ca: ca/total*100, o: o/total*100 };
+}
+
+function computeGlaze() {
+  const { f, s, ca, o } = getNorm();
+  const type = document.getElementById('oxide-type').value;
+
+  document.getElementById('feldspar-pct').textContent = Math.round(f) + '%';
+  document.getElementById('silica-pct').textContent = Math.round(s) + '%';
+  document.getElementById('calcium-pct').textContent = Math.round(ca) + '%';
+  document.getElementById('oxide-pct').textContent = Math.round(o) + '%';
+
+  // Fusion temp estimate: feldspar lowers melting, silica raises, CaCO3 fluxes
+  const fuse = Math.round(1100 - f * 2.5 - ca * 1.8 + s * 1.0 - o * 0.5);
+  const fusionClamped = Math.max(700, Math.min(1300, fuse));
+  document.getElementById('res-fusion').textContent = fusionClamped + '°C';
+  document.getElementById('res-range').textContent = (fusionClamped - 60) + '〜' + (fusionClamped + 60) + '°C';
+
+  // Texture
+  const glossScore = f * 0.5 + ca * 0.3 - s * 0.2 - o * 0.1;
+  let texture = 'マット';
+  if (glossScore > 50) texture = '艶あり';
+  else if (glossScore > 30) texture = '半艶（サテン）';
+  document.getElementById('res-texture').textContent = texture;
+
+  // Color
+  const ci = COLOR_INFO[type] || COLOR_INFO.none;
+  document.getElementById('res-color').textContent = ci.text;
+  const box = document.getElementById('res-color-box');
+  box.style.background = ci.bg;
+  document.getElementById('res-color').style.color = ci.fg;
+}
+
+// Preset buttons
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = PRESETS[btn.dataset.preset];
+    document.getElementById('feldspar-sl').value = p.f;
+    document.getElementById('silica-sl').value = p.s;
+    document.getElementById('calcium-sl').value = p.c;
+    document.getElementById('oxide-sl').value = p.o;
+    document.getElementById('oxide-type').value = p.type;
+    computeGlaze();
+  });
+});
+
+['feldspar-sl','silica-sl','calcium-sl','oxide-sl'].forEach(id => {
+  document.getElementById(id).addEventListener('input', computeGlaze);
+});
+document.getElementById('oxide-type').addEventListener('change', computeGlaze);
+
+// Notes
+const notesArea = document.getElementById('notes-area');
+notesArea.value = localStorage.getItem('raku-notes') || '';
+document.getElementById('save-notes').addEventListener('click', () => {
+  localStorage.setItem('raku-notes', notesArea.value);
+  const msg = document.getElementById('save-msg');
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2000);
+});
+
+computeGlaze();
+renderReduction();
+</script>
+</body>
+</html>
